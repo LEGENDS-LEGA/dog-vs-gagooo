@@ -6,7 +6,7 @@ document.addEventListener('DOMContentLoaded', function() {
     
     function playCountdownAudio() {
         if (countdown === 3) {
-            countdown3Audio.play("sax/321.mp3");
+            countdown3Audio.play();
         } 
     }
     
@@ -34,17 +34,18 @@ document.addEventListener('DOMContentLoaded', function() {
     let monsterImage = document.getElementById('monsterImage');
     let playerImage = document.getElementById('playerImage');
     
-
     let myAudio1 = new Audio('sax/video - Trim1.mp4');
     let myAudio2 = new Audio('sax/video - Trim.mp4');
     let myAudio3 = new Audio('sax/hello - Trim4.mp4');
-
+    
     let monsterAudioKick = new Audio('sax/yametekudasaicat.mp3');
     let monsterAudioSuperKick = new Audio('sax/yooooooooooooooooooooooooo-mpcut_lmdwcd.mp3');
     let monsterAudioHealth = new Audio('sax/oan1.mp3');
     
-    let currentAudio = null;
-
+    // Add the victory sounds
+    let playerVictoryAudio = new Audio('sax/mixkit-huge-crowd-cheering-victory-462.wav');
+    let monsterVictoryAudio = new Audio('sax/mixkit-cheering-crowd-loud-whistle-610.wav');
+    
     function changeHealth(progressBar, change) {
         let newValue = progressBar.value + change;
         if (newValue > 100) newValue = 100;
@@ -53,15 +54,9 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function playAudio(audioElement) {
-        if (currentAudio && currentAudio !== audioElement) {
-            currentAudio.pause();
-            currentAudio.currentTime = 0;
-        }
         audioElement.currentTime = 0;
         audioElement.play();
-        currentAudio = audioElement;
     }
-    
 
     function changeImage(character, action) {
         if (character === 'monster') {
@@ -84,47 +79,71 @@ document.addEventListener('DOMContentLoaded', function() {
         console.log(`Changed ${character} image to ${action}`);
     }
 
+    function checkGameOver() {
+        if (playerLife.value <= 0) {
+            // Monster wins
+            playAudio(monsterVictoryAudio);
+            alert("Monster Wins!");
+        } else if (monsterLife.value <= 0) {
+            // Player wins
+            playAudio(playerVictoryAudio);
+            alert("Player Wins!");
+        }
+    }
+
     function addClickHandlers() {
-        monsterKick.addEventListener('click', () => {
-            const damage = -(Math.floor(Math.random() * 6) + 15);
-            changeHealth(playerLife, damage);
-            changeImage('monster', 'kick');
-            playAudio(monsterAudioKick);  
-        });
-
-        monsterSuperKick.addEventListener('click', () => {
-            const damage = -(Math.floor(Math.random() * 11) + 25);
-            changeHealth(playerLife, damage);
-            changeImage('monster', 'superKick');
-            playAudio(monsterAudioSuperKick);  
-        });
-
-        monsterHealth.addEventListener('click', () => {
-            const heal = Math.floor(Math.random() * 11) + 20;
-            changeHealth(monsterLife, heal);
-            changeImage('monster', 'health');
-            playAudio(monsterAudioHealth);  
-        });
-
+        // Player kicks first
         playerKick.addEventListener('click', () => {
             const damage = -(Math.floor(Math.random() * 6) + 15);
             changeHealth(monsterLife, damage);
             changeImage('player', 'kick');
             playAudio(myAudio2);
-        });
+            
+            // Monster kicks next
+            setTimeout(() => {
+                const damage = -(Math.floor(Math.random() * 6) + 15);
+                changeHealth(playerLife, damage);
+                changeImage('monster', 'kick');
+                playAudio(monsterAudioKick);
+                
+                // Player kicks again
+                setTimeout(() => {
+                    const damage = -(Math.floor(Math.random() * 6) + 15);
+                    changeHealth(monsterLife, damage);
+                    changeImage('player', 'kick');
+                    playAudio(myAudio2);
 
-        playerSuperKick.addEventListener('click', () => {
-            const damage = -(Math.floor(Math.random() * 11) + 15);
-            changeHealth(monsterLife, damage);
-            changeImage('player', 'superKick');
-            playAudio(myAudio1);
-        });
+                    // Monster super kicks
+                    setTimeout(() => {
+                        const damage = -(Math.floor(Math.random() * 11) + 25);
+                        changeHealth(playerLife, damage);
+                        changeImage('monster', 'superKick');
+                        playAudio(monsterAudioSuperKick);
 
-        playerHealth.addEventListener('click', () => {
-            const heal = Math.floor(Math.random() * 11) + 20;
-            changeHealth(playerLife, heal);
-            changeImage('player', 'health');
-            playAudio(myAudio3);
+                        // Player super kicks
+                        setTimeout(() => {
+                            const damage = -(Math.floor(Math.random() * 11) + 15);
+                            changeHealth(monsterLife, damage);
+                            changeImage('player', 'superKick');
+                            playAudio(myAudio1);
+                            
+                            // Random Heal for one player
+                            setTimeout(() => {
+                                const heal = Math.floor(Math.random() * 11) + 20;
+                                changeHealth(playerLife, heal);
+                                changeImage('player', 'health');
+                                playAudio(myAudio3);
+
+                                // No second heal for monster
+                                // Heal has already been used, no action for monster
+                            }, 1500);
+                        }, 1500);
+                    }, 1500);
+                }, 1500);
+            }, 1500);
+            
+            // Check if the game is over
+            setTimeout(checkGameOver, 7000); // Wait for the actions to complete before checking
         });
     }
 
